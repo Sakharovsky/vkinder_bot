@@ -8,4 +8,6 @@
   3. Город
   4. Семейное положение
 
-Результаты записываются в базу данных, созданную через ORM SQLAlchemy.
+Результаты записываются в базу данных, созданную через ORM SQLAlchemy, по схеме:
+
+![alt text](https://github.com/Sakharovsky/vkinder_bot/blob/master/db_schema.png)
