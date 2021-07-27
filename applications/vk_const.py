@@ -1,4 +1,4 @@
-RATINGS = {'new': 0, 'liked': 1, 'disliked': 2, 'banned': 3}
+RATINGS = {'shown': 0, 'liked': 1, 'banned': 2, 'favorite': 3, 'no_photoes': 4}
 
 STATUSES = {
     1: 'не женат (не замужем)',

@@ -79,20 +79,43 @@ class searches(base):
     id = sq.Column(sq.Integer, primary_key=True)
     user = sq.orm.relationship('users', secondary=user_to_search, back_populates='search')
     client = sq.Column(sq.Integer, sq.ForeignKey('clients.id'))
+    photo = sq.orm.relationship('photos', backref='searches')
     name = sq.Column(sq.String, nullable=False)
     lastname = sq.Column(sq.String, nullable=False)
-    vk_id = sq.Column(sq.Integer, nullable=False, unique=True)
+    vk_id = sq.Column(sq.Integer, nullable=False)
     rating_id = sq.Column(sq.Integer)
     updated = sq.Column(sq.TIMESTAMP, nullable=False)
 
-    def __init__(self, vk_id, name, lastname):
+    def __init__(self, vk_id, client_id, name, lastname, ratind_id):
         self.vk_id = vk_id
+        self.client = client_id
         self.name = name
         self.lastname = lastname
+        self.rating_id = ratind_id
         self.updated = dt.now()
     
     def __repr__(self):
         return f'id: {self.id}, name: {self.name}, lastname: {self.lastname}, vk_id: {self.vk_id}, rating_id: {self.rating_id}'
+
+class photos(base):
+    __tablename__ = 'photos'
+
+    id = sq.Column(sq.Integer, primary_key=True)
+    search_id = sq.Column(sq.Integer, sq.ForeignKey('searches.id'))
+    likes = sq.Column(sq.Integer, nullable=False)
+    comments = sq.Column(sq.Integer, nullable=False)
+    vk_id = sq.Column(sq.Integer, nullable=False)
+    updated = sq.Column(sq.TIMESTAMP, nullable=False)
+
+    def __init__(self, search_id, likes, comments, vk_id):
+        self.vk_id = vk_id
+        self.search_id = search_id
+        self.likes = likes
+        self.comments = comments
+        self.updated = dt.now()
+    
+    def __repr__(self):
+        return f'search_id: {self.search_id}, vk_id: {self.vk_id}, likes: {self.likes}, comments: {self.comments}'
 
 def build():
     base.metadata.create_all(engine)
@@ -130,7 +153,7 @@ def upd_token(vk_id, token):
         user.token = token
         session.commit()
 
-def upd_client(vk_id, age=None, city=None, status=None, sex=None):
+def upd_client(vk_id, age=None, city=None, status=None, sex=None, chosen=None, search_list=None):
     session = sq.orm.sessionmaker(bind=engine)
     with session() as session:
         user = session.query(users).filter_by(vk_id=vk_id).first()
@@ -145,6 +168,10 @@ def upd_client(vk_id, age=None, city=None, status=None, sex=None):
                     client.status = status
                 elif sex != None:
                     client.sex_id = sex
+                elif chosen != None:
+                    client.chosen = chosen
+                elif search_list != None:
+                    client.search_list = search_list
                 session.commit()
 
 def get_user_client(vk_id):
@@ -156,11 +183,42 @@ def get_user_client(vk_id):
             if client.chosen == 1:
                 return client
 
+def get_searches(vk_id):
+    session = sq.orm.sessionmaker(bind=engine)
+    with session() as session:
+        user = session.query(users).filter_by(vk_id=vk_id).first()
+        clients = user.client
+        for client in clients:
+            if client.chosen == 1:
+                db_searches = user.search
+                search_list = []
+                for search in db_searches:
+                    # Выбираем только профили, относящиеся к актуальному клиенту или в рейтинге banned для юзера
+                    if search.client == client.id or search.rating_id == 2:
+                        search_list.append(search.vk_id)
+                return search_list
+
+def get_last_search(user_vk_id, vk_id):
+    session = sq.orm.sessionmaker(bind=engine)
+    with session() as session:
+        user = session.query(users).filter_by(vk_id=user_vk_id).first()
+        searches = user.search
+        for search in searches:
+            if search.vk_id == vk_id:
+                return search.id
+
 def conn_user_client(vk_id, client):
     session = sq.orm.sessionmaker(bind=engine)
     with session() as session:
         user = session.query(users).filter_by(vk_id=vk_id).first()
         user.client.append(client)
+        session.commit()
+
+def conn_user_search(vk_id, search):
+    session = sq.orm.sessionmaker(bind=engine)
+    with session() as session:
+        user = session.query(users).filter_by(vk_id=vk_id).first()
+        user.search.append(search)
         session.commit()
 
 def to_db(object):
@@ -187,4 +245,4 @@ if __name__ == '__main__':
     """Сетап"""
     # build()
 
-    pass
+    
