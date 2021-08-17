@@ -26,7 +26,7 @@ class users(base):
 
     id = sq.Column(sq.Integer, primary_key=True)
     client = sq.orm.relationship('clients', secondary=user_to_client, back_populates='user')
-    search = sq.orm.relationship('searches', secondary=user_to_search,back_populates='user')
+    search = sq.orm.relationship('searches', secondary=user_to_search, back_populates='user')
     name = sq.Column(sq.String, nullable=False)
     lastname = sq.Column(sq.String, nullable=False)
     vk_id = sq.Column(sq.Integer, nullable=False, unique=True)
@@ -140,7 +140,7 @@ def test_db():
 
     session.commit()
 
-def get_user_info(vk_id):
+def get_user(vk_id):
     session = sq.orm.sessionmaker(bind=engine)
     with session() as session:
         user = session.query(users).filter_by(vk_id=vk_id).first()

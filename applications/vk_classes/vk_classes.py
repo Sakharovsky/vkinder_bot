@@ -1,8 +1,7 @@
 from random import randrange
-from pprint import pprint
 import vk_api
 from vk_api import VkApi
-from vk_api.longpoll import VkLongPoll, VkEventType
+from vk_api.longpoll import VkLongPoll
 from datetime import datetime as dt
 
 import os,sys,inspect
